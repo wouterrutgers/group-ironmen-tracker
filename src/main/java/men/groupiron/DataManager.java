@@ -1,12 +1,9 @@
 package men.groupiron;
 
-import com.google.gson.Gson;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.WorldType;
-import net.runelite.client.RuneLiteProperties;
-import okhttp3.*;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -22,14 +19,11 @@ public class DataManager {
     @Inject
     GroupIronmenTrackerConfig config;
     @Inject
-    private Gson gson;
-    @Inject
-    private OkHttpClient okHttpClient;
-    @Inject
     private CollectionLogManager collectionLogManager;
-    private static final String PUBLIC_BASE_URL = "https://groupiron.men";
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    private static final String USER_AGENT = "GroupIronmenTracker/1.5.3 " + "RuneLite/" + RuneLiteProperties.getVersion();
+    @Inject
+    private PlayerDataService playerDataService;
+    @Inject
+    private HttpRequestService httpRequestService;
     private boolean isMemberInGroup = false;
     private int skipNextNAttempts = 0;
 
@@ -51,6 +45,8 @@ public class DataManager {
     private final DataState position = new DataState("coordinates", false);
     @Getter
     private final DataState runePouch = new DataState("rune_pouch", false);
+    @Getter
+    private final DataState quiver = new DataState("quiver", false);
     @Getter
     private final DataState interacting = new DataState("interacting", false);
     @Getter
@@ -98,42 +94,29 @@ public class DataManager {
             quests.consumeState(updates);
             position.consumeState(updates);
             runePouch.consumeState(updates);
+            quiver.consumeState(updates);
             interacting.consumeState(updates);
             deposited.consumeState(updates);
             seedVault.consumeState(updates);
             achievementDiary.consumeState(updates);
             collectionLogManager.consumeCollections(updates);
             collectionLogManager.consumeNewItems(updates);
+            playerDataService.writeClogItems(updates);
 
             if (updates.size() > 1) {
-                try {
-                    RequestBody body = RequestBody.create(JSON, gson.toJson(updates));
-                    // log.info("{}", gson.toJson(updates));
-                    Request request = new Request.Builder()
-                            .url(url)
-                            .header("Authorization", groupToken)
-                            .header("User-Agent", USER_AGENT)
-                            .post(body)
-                            .build();
-                    Call call = okHttpClient.newCall(request);
+                HttpRequestService.HttpResponse response = httpRequestService.post(url, groupToken, updates);
 
-                    try (Response response = call.execute()) {
-                        if (!response.isSuccessful()) {
-                            // log.error(response.body().string());
-                            skipNextNAttempts = 10;
-                            if (response.code() == 401) {
-                                // log.error("User not authorized to submit player data with current settings.");
-                                isMemberInGroup = false;
-                            }
-
-                            restoreStateIfNothingUpdated();
-                        }
-                    }
-                } catch (Exception _error) {
-                    // log.error(_error.toString());
+                if (!response.isSuccessful()) {
                     skipNextNAttempts = 10;
+                    if (response.getCode() == 401) {
+                        isMemberInGroup = false;
+                    }
                     restoreStateIfNothingUpdated();
+                } else {
+                    playerDataService.clearClogItems();
                 }
+            } else {
+                log.debug("Skip POST: no changes to send (fields={})", updates.size());
             }
         }
     }
@@ -142,20 +125,9 @@ public class DataManager {
         String url = amIMemberOfGroupUrl(playerName);
         if (url == null) return false;
 
-        Request request = new Request.Builder()
-                .url(url)
-                .header("Authorization", groupToken)
-                .header("User-Agent", USER_AGENT)
-                .get()
-                .build();
-        Call call = okHttpClient.newCall(request);
+        HttpRequestService.HttpResponse response = httpRequestService.get(url, groupToken);
 
-        try (Response response = call.execute()) {
-            // log.error(response.body().string());
-            return response.isSuccessful();
-        } catch (Exception _error) {
-            return false;
-        }
+        return response.isSuccessful();
     }
 
     // NOTE: These states should only be restored if a new update did not come in at some point before calling this
@@ -169,6 +141,7 @@ public class DataManager {
         quests.restoreState();
         position.restoreState();
         runePouch.restoreState();
+        quiver.restoreState();
         interacting.restoreState();
         deposited.restoreState();
         seedVault.restoreState();
@@ -178,9 +151,7 @@ public class DataManager {
     }
 
     private String baseUrl() {
-        String baseUrlOverride = config.baseUrlOverride().trim();
-        if (baseUrlOverride.length() > 0) return baseUrlOverride;
-        return PUBLIC_BASE_URL;
+        return httpRequestService.getBaseUrl();
     }
 
     private String groupName() {
