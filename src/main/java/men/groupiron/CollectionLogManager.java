@@ -7,7 +7,7 @@ import net.runelite.api.EnumComposition;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.StructComposition;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.util.Text;
 import org.apache.commons.lang3.StringUtils;
@@ -86,7 +86,7 @@ public class CollectionLogManager {
     }
 
     public void updateCollection(ItemContainerState containerState) {
-        Widget collectionLogHeader = client.getWidget(WidgetInfo.COLLECTION_LOG_ENTRY_HEADER);
+        Widget collectionLogHeader = client.getWidget(InterfaceID.Collection.HEADER_TEXT);
         if (collectionLogHeader == null || collectionLogHeader.isHidden()) return;
         Widget[] collectionLogHeaderChildren = collectionLogHeader.getChildren();
         if (collectionLogHeaderChildren == null || collectionLogHeaderChildren.length == 0) return;

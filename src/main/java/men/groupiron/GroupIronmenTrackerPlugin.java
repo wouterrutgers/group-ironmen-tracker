@@ -6,9 +6,11 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
+import net.runelite.api.gameval.InventoryID;
+import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -158,26 +160,26 @@ public class GroupIronmenTrackerPlugin extends Plugin {
         final int id = event.getContainerId();
         ItemContainer container = event.getItemContainer();
 
-        if (id == InventoryID.BANK.getId()) {
+        if (id == InventoryID.BANK) {
             dataManager.getDeposited().reset();
             dataManager.getBank().update(new ItemContainerState(playerName, container, itemManager));
-        } else if (id == InventoryID.SEED_VAULT.getId()) {
+        } else if (id == InventoryID.SEED_VAULT) {
             dataManager.getSeedVault().update(new ItemContainerState(playerName, container, itemManager));
-        } else if (id == InventoryID.INVENTORY.getId()) {
+        } else if (id == InventoryID.INV) {
             ItemContainerState newInventoryState = new ItemContainerState(playerName, container, itemManager, 28);
             if (itemsDeposited > 0) {
                 updateDeposited(newInventoryState, (ItemContainerState) dataManager.getInventory().mostRecentState());
             }
 
             dataManager.getInventory().update(newInventoryState);
-        } else if (id == InventoryID.EQUIPMENT.getId()) {
+        } else if (id == InventoryID.WORN) {
             ItemContainerState newEquipmentState = new ItemContainerState(playerName, container, itemManager, 14);
             if (itemsDeposited > 0) {
                 updateDeposited(newEquipmentState, (ItemContainerState) dataManager.getEquipment().mostRecentState());
             }
 
             dataManager.getEquipment().update(newEquipmentState);
-        } else if (id == InventoryID.GROUP_STORAGE.getId()) {
+        } else if (id == InventoryID.INV_GROUP_TEMP) {
             dataManager.getSharedBank().update(new ItemContainerState(playerName, container, itemManager));
         } else if (id == COLLECTION_LOG_INVENTORYID) {
             collectionLogManager.updateCollection(new ItemContainerState(playerName, container, itemManager));
@@ -186,7 +188,7 @@ public class GroupIronmenTrackerPlugin extends Plugin {
 
     @Subscribe
     private void onScriptPostFired(ScriptPostFired event) {
-        if (event.getScriptId() == CHATBOX_ENTERED && client.getWidget(WidgetInfo.DEPOSIT_BOX_INVENTORY_ITEMS_CONTAINER) != null) {
+        if (event.getScriptId() == CHATBOX_ENTERED && client.getWidget(InterfaceID.BankDepositbox.INVENTORY) != null) {
             itemsMayHaveBeenDeposited();
         }
     }
@@ -234,8 +236,8 @@ public class GroupIronmenTrackerPlugin extends Plugin {
                 break;
             case ScriptID.NOTIFICATION_DELAY:
                 if (!notificationStarted) return;
-                String topText = client.getVarcStrValue(VarClientStr.NOTIFICATION_TOP_TEXT);
-                String bottomText = client.getVarcStrValue(VarClientStr.NOTIFICATION_BOTTOM_TEXT);
+                String topText = client.getVarcStrValue(VarClientID.NOTIFICATION_TITLE);
+                String bottomText = client.getVarcStrValue(VarClientID.NOTIFICATION_MAIN);
                 if (topText.equalsIgnoreCase("Collection log")) {
                     String entry = Text.removeTags(bottomText).substring("New item:".length());
                     collectionLogManager.updateNewItem(entry);
