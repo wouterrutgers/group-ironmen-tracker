@@ -2,8 +2,8 @@ package men.groupiron;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -24,7 +24,7 @@ public class ItemNameLookup {
     private Gson gson;
 
     public void startUp() {
-        new Thread(this::load).start();
+        init();
     }
 
     public void shutDown() {
@@ -35,44 +35,52 @@ public class ItemNameLookup {
         return nameToId.get(name);
     }
 
-    private void load() {
-        try {
-            Map<Integer, String> namesById = fetchNamesById();
-            Set<Integer> notedIds = fetchNotedIds();
+    private void init() {
+        queryNamesById()
+                .thenAcceptBothAsync(
+                        queryNotedItemIds().exceptionally(e -> {
+                            log.error("Failed to read noted items", e);
 
-            namesById.forEach((id, n) -> {
-                if (!notedIds.contains(id)) {
-                    nameToId.putIfAbsent(n, id);
+                            return Collections.emptySet();
+                        }),
+                        this::populate)
+                .exceptionally(e -> {
+                    log.error("Failed to read item names", e);
+
+                    return null;
+                });
+    }
+
+    private void populate(@NonNull Map<Integer, String> namesById, @NonNull Set<Integer> notedIds) {
+        namesById.forEach((id, name) -> {
+            if (!notedIds.contains(id)) nameToId.putIfAbsent(name, id);
+        });
+
+        log.debug("Completed initialization of item cache with {} entries", nameToId.size());
+    }
+
+    private CompletableFuture<Map<Integer, String>> queryNamesById() {
+        return queryCache("names.json", new TypeToken<Map<Integer, String>>() {});
+    }
+
+    private CompletableFuture<Set<Integer>> queryNotedItemIds() {
+        return queryCache("notes.json", new TypeToken<Map<Integer, Integer>>() {})
+                .thenApply(Map::keySet);
+    }
+
+    private <T> CompletableFuture<T> queryCache(@NonNull String fileName, @NonNull TypeToken<T> type) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String url = ITEM_CACHE_BASE_URL + fileName;
+                HttpRequestService.HttpResponse response = httpRequestService.get(url, null);
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("HTTP " + response.getCode() + " for " + url);
                 }
-            });
 
-            log.debug("ItemNameLookup initialized with {} entries", nameToId.size());
-        } catch (Exception e) {
-            log.error("ItemNameLookup initialization failed: {}", e.toString());
-        }
-    }
-
-    private Map<Integer, String> fetchNamesById() throws Exception {
-        String url = ITEM_CACHE_BASE_URL + "names.json";
-        HttpRequestService.HttpResponse response = httpRequestService.get(url, null);
-        if (!response.isSuccessful()) {
-            throw new Exception("HTTP " + response.getCode() + " for " + url);
-        }
-        Type type = new TypeToken<Map<Integer, String>>() {}.getType();
-        Map<Integer, String> map = gson.fromJson(response.getBody(), type);
-
-        return map != null ? map : Collections.emptyMap();
-    }
-
-    private Set<Integer> fetchNotedIds() throws Exception {
-        String url = ITEM_CACHE_BASE_URL + "notes.json";
-        HttpRequestService.HttpResponse response = httpRequestService.get(url, null);
-        if (!response.isSuccessful()) {
-            throw new Exception("HTTP " + response.getCode() + " for " + url);
-        }
-        Type type = new TypeToken<Map<Integer, Integer>>() {}.getType();
-        Map<Integer, Integer> notes = gson.fromJson(response.getBody(), type);
-
-        return notes != null ? notes.keySet() : Collections.emptySet();
+                return gson.fromJson(response.getBody(), type.getType());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
