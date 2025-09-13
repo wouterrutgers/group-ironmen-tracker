@@ -42,7 +42,7 @@ public class GroupIronmenTrackerPlugin extends Plugin {
     @Inject
     private CollectionLogManager collectionLogManager;
     @Inject
-    private PlayerDataService playerDataService;
+    private CollectionLogV2Service collectionLogV2Service;
     @Inject
     private CollectionLogWidgetSubscriber collectionLogWidgetSubscriber;
     @Inject
@@ -281,7 +281,7 @@ public class GroupIronmenTrackerPlugin extends Plugin {
         try {
             Integer itemId = itemNameLookup.findItemId(itemName);
             if (itemId != null) {
-                playerDataService.storeClogItem(itemId, 1);
+                collectionLogV2Service.storeClogItem(itemId, 1);
             }
         } catch (Exception ignored) {
             //

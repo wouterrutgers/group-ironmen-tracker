@@ -25,7 +25,7 @@ public class CollectionLogWidgetSubscriber {
     private Client client;
 
     @Inject
-    private PlayerDataService playerDataService;
+    private CollectionLogV2Service collectionLogV2Service;
 
     private boolean searchTriggered = false;
     private int searchTriggeredTick = -1;
@@ -69,7 +69,7 @@ public class CollectionLogWidgetSubscriber {
                 try {
                     int itemId = (int) args[1];
                     int quantity = (int) args[2];
-                    playerDataService.storeClogItem(itemId, quantity);
+                    collectionLogV2Service.storeClogItem(itemId, quantity);
                 } catch (Exception ignored) {
                     //
                 }
