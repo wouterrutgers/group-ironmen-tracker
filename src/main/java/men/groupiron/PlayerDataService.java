@@ -20,7 +20,7 @@ public class PlayerDataService {
         clogItems.put(itemId, quantity);
     }
 
-    public synchronized void writeClogItems(Map<String, Object> updates) {
+    public synchronized void consumeClogItems(Map<String, Object> updates) {
         if (clogItems.isEmpty()) return;
         // Send collection log entries as an id->quantity map under 'collection_log_v2'
         updates.put("collection_log_v2", new HashMap<>(clogItems));

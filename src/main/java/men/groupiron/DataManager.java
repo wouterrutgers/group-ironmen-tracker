@@ -101,7 +101,7 @@ public class DataManager {
             achievementDiary.consumeState(updates);
             collectionLogManager.consumeCollections(updates);
             collectionLogManager.consumeNewItems(updates);
-            playerDataService.writeClogItems(updates);
+            playerDataService.consumeClogItems(updates);
 
             if (updates.size() > 1) {
                 HttpRequestService.HttpResponse response = httpRequestService.post(url, groupToken, updates);
