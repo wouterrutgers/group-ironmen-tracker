@@ -45,13 +45,4 @@ public class QuiverState implements ConsumableState {
 
         return this.ammo.equals(other.ammo);
     }
-
-    @Override
-    public int hashCode() {
-        int result = 17;
-        result = 31 * result + ammo.getId();
-        result = 31 * result + ammo.getQuantity();
-
-        return result;
-    }
 }
