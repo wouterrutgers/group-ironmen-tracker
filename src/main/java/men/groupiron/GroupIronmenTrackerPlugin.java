@@ -1,13 +1,17 @@
 package men.groupiron;
 
 import com.google.inject.Provides;
+import java.time.temporal.ChronoUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
-import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.widgets.Widget;
@@ -21,36 +25,39 @@ import net.runelite.client.task.Schedule;
 import net.runelite.client.util.Text;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.inject.Inject;
-import java.time.temporal.ChronoUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 @Slf4j
-@PluginDescriptor(
-        name = "Group Ironmen Tracker"
-)
+@PluginDescriptor(name = "Group Ironmen Tracker")
 public class GroupIronmenTrackerPlugin extends Plugin {
     @Inject
     private Client client;
+
     @Inject
     private GroupIronmenTrackerConfig config;
+
     @Inject
     private DataManager dataManager;
+
     @Inject
     private ItemManager itemManager;
+
     @Inject
     private CollectionLogManager collectionLogManager;
+
     @Inject
     private PlayerDataService playerDataService;
+
     @Inject
     private CollectionLogWidgetSubscriber collectionLogWidgetSubscriber;
+
     @Inject
     private ItemNameLookup itemNameLookup;
+
     @Inject
     private HttpRequestService httpRequestService;
+
     @Inject
     ClientThread clientThread;
+
     private int itemsDeposited = 0;
     private static final int SECONDS_BETWEEN_UPLOADS = 1;
     private static final int SECONDS_BETWEEN_INFREQUENT_DATA_CHANGES = 60;
@@ -60,7 +67,8 @@ public class GroupIronmenTrackerPlugin extends Plugin {
     private static final int CHATBOX_ENTERED = 681;
     private static final int GROUP_STORAGE_LOADER = 293;
     private static final int COLLECTION_LOG_INVENTORYID = 620;
-    private static final Pattern COLLECTION_LOG_ITEM_PATTERN = Pattern.compile("New item added to your collection log: (.*)");
+    private static final Pattern COLLECTION_LOG_ITEM_PATTERN =
+            Pattern.compile("New item added to your collection log: (.*)");
     private boolean notificationStarted = false;
 
     @Override
@@ -80,22 +88,14 @@ public class GroupIronmenTrackerPlugin extends Plugin {
         log.info("Group Ironmen Tracker stopped!");
     }
 
-    @Schedule(
-            period = SECONDS_BETWEEN_UPLOADS,
-            unit = ChronoUnit.SECONDS,
-            asynchronous = true
-    )
+    @Schedule(period = SECONDS_BETWEEN_UPLOADS, unit = ChronoUnit.SECONDS, asynchronous = true)
     public void submitToApi() {
         dataManager.submitToApi();
     }
 
-    @Schedule(
-            period = SECONDS_BETWEEN_UPLOADS,
-            unit = ChronoUnit.SECONDS
-    )
+    @Schedule(period = SECONDS_BETWEEN_UPLOADS, unit = ChronoUnit.SECONDS)
     public void updateThingsThatDoChangeOften() {
-        if (doNotUseThisData())
-            return;
+        if (doNotUseThisData()) return;
         Player player = client.getLocalPlayer();
         String playerName = player.getName();
         dataManager.getResources().update(new ResourcesState(playerName, client));
@@ -108,13 +108,9 @@ public class GroupIronmenTrackerPlugin extends Plugin {
         dataManager.getQuiver().update(new QuiverState(playerName, client, itemManager));
     }
 
-    @Schedule(
-            period = SECONDS_BETWEEN_INFREQUENT_DATA_CHANGES,
-            unit = ChronoUnit.SECONDS
-    )
+    @Schedule(period = SECONDS_BETWEEN_INFREQUENT_DATA_CHANGES, unit = ChronoUnit.SECONDS)
     public void updateThingsThatDoNotChangeOften() {
-        if (doNotUseThisData())
-            return;
+        if (doNotUseThisData()) return;
         String playerName = client.getLocalPlayer().getName();
         dataManager.getQuests().update(new QuestState(playerName, client));
         dataManager.getAchievementDiary().update(new AchievementDiaryState(playerName, client));
@@ -146,16 +142,14 @@ public class GroupIronmenTrackerPlugin extends Plugin {
 
     @Subscribe
     public void onStatChanged(StatChanged statChanged) {
-        if (doNotUseThisData())
-            return;
+        if (doNotUseThisData()) return;
         String playerName = client.getLocalPlayer().getName();
         dataManager.getSkills().update(new SkillState(playerName, client));
     }
 
     @Subscribe
     public void onItemContainerChanged(ItemContainerChanged event) {
-        if (doNotUseThisData())
-            return;
+        if (doNotUseThisData()) return;
         String playerName = client.getLocalPlayer().getName();
         final int id = event.getContainerId();
         ItemContainer container = event.getItemContainer();
@@ -168,14 +162,16 @@ public class GroupIronmenTrackerPlugin extends Plugin {
         } else if (id == InventoryID.INV) {
             ItemContainerState newInventoryState = new ItemContainerState(playerName, container, itemManager, 28);
             if (itemsDeposited > 0) {
-                updateDeposited(newInventoryState, (ItemContainerState) dataManager.getInventory().mostRecentState());
+                updateDeposited(newInventoryState, (ItemContainerState)
+                        dataManager.getInventory().mostRecentState());
             }
 
             dataManager.getInventory().update(newInventoryState);
         } else if (id == InventoryID.WORN) {
             ItemContainerState newEquipmentState = new ItemContainerState(playerName, container, itemManager, 14);
             if (itemsDeposited > 0) {
-                updateDeposited(newEquipmentState, (ItemContainerState) dataManager.getEquipment().mostRecentState());
+                updateDeposited(newEquipmentState, (ItemContainerState)
+                        dataManager.getEquipment().mostRecentState());
             }
 
             dataManager.getEquipment().update(newEquipmentState);
@@ -212,8 +208,7 @@ public class GroupIronmenTrackerPlugin extends Plugin {
 
     @Subscribe
     private void onChatMessage(ChatMessage chatMessage) {
-        if (doNotUseThisData())
-            return;
+        if (doNotUseThisData()) return;
         if (chatMessage.getType() != ChatMessageType.GAMEMESSAGE) return;
 
         Matcher matcher = COLLECTION_LOG_ITEM_PATTERN.matcher(chatMessage.getMessage());
@@ -227,10 +222,8 @@ public class GroupIronmenTrackerPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onScriptPreFired(ScriptPreFired scriptPreFired)
-    {
-        switch (scriptPreFired.getScriptId())
-        {
+    public void onScriptPreFired(ScriptPreFired scriptPreFired) {
+        switch (scriptPreFired.getScriptId()) {
             case ScriptID.NOTIFICATION_START:
                 notificationStarted = true;
                 break;
@@ -253,7 +246,8 @@ public class GroupIronmenTrackerPlugin extends Plugin {
         // actions were performed OR a custom amount was entered while the deposit box inventory widget was opened.
         // Then we allow up to two game ticks were an inventory changed event can occur and at that point we assume
         // it must have been caused by the action detected just before. We can't check the inventory at the time of
-        // either interaction since the inventory may have not been updated yet. We also cannot just check that the deposit
+        // either interaction since the inventory may have not been updated yet. We also cannot just check that the
+        // deposit
         // box window is open in the item container event since it is possible for a player to close the widget before
         // the event handler is called.
         itemsDeposited = 2;

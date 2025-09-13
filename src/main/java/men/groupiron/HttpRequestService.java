@@ -12,7 +12,8 @@ import okhttp3.*;
 @Singleton
 public class HttpRequestService {
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    private static final String USER_AGENT = "GroupIronmenTracker/1.5.3 " + "RuneLite/" + RuneLiteProperties.getVersion();
+    private static final String USER_AGENT =
+            "GroupIronmenTracker/1.5.3 " + "RuneLite/" + RuneLiteProperties.getVersion();
     private static final String PUBLIC_BASE_URL = "https://groupiron.men";
 
     @Inject

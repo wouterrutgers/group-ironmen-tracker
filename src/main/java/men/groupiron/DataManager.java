@@ -1,58 +1,75 @@
 package men.groupiron;
 
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.WorldType;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Singleton
 public class DataManager {
     @Inject
     Client client;
+
     @Inject
     GroupIronmenTrackerConfig config;
+
     @Inject
     private CollectionLogManager collectionLogManager;
+
     @Inject
     private PlayerDataService playerDataService;
+
     @Inject
     private HttpRequestService httpRequestService;
+
     private boolean isMemberInGroup = false;
     private int skipNextNAttempts = 0;
 
     @Getter
     private final DataState inventory = new DataState("inventory", false);
+
     @Getter
     private final DataState bank = new DataState("bank", false);
+
     @Getter
     private final DataState equipment = new DataState("equipment", false);
+
     @Getter
     private final DataState sharedBank = new DataState("shared_bank", true);
+
     @Getter
     private final DataState resources = new DataState("stats", false);
+
     @Getter
     private final DataState skills = new DataState("skills", false);
+
     @Getter
     private final DataState quests = new DataState("quests", false);
+
     @Getter
     private final DataState position = new DataState("coordinates", false);
+
     @Getter
     private final DataState runePouch = new DataState("rune_pouch", false);
+
     @Getter
     private final DataState quiver = new DataState("quiver", false);
+
     @Getter
     private final DataState interacting = new DataState("interacting", false);
+
     @Getter
     private final DataState seedVault = new DataState("seed_vault", false);
+
     @Getter
     private final DataState achievementDiary = new DataState("diary_vars", false);
+
     @Getter
     private final DepositedItems deposited = new DepositedItems();
 
@@ -184,12 +201,12 @@ public class DataManager {
     private boolean isBadWorldType() {
         EnumSet<WorldType> worldTypes = client.getWorldType();
         for (WorldType worldType : worldTypes) {
-            if (worldType == WorldType.SEASONAL ||
-                    worldType == WorldType.DEADMAN ||
-                    worldType == WorldType.TOURNAMENT_WORLD ||
-                    worldType == WorldType.PVP_ARENA ||
-                    worldType == WorldType.BETA_WORLD ||
-                    worldType == WorldType.QUEST_SPEEDRUNNING) {
+            if (worldType == WorldType.SEASONAL
+                    || worldType == WorldType.DEADMAN
+                    || worldType == WorldType.TOURNAMENT_WORLD
+                    || worldType == WorldType.PVP_ARENA
+                    || worldType == WorldType.BETA_WORLD
+                    || worldType == WorldType.QUEST_SPEEDRUNNING) {
                 return true;
             }
         }

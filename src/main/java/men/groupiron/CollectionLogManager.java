@@ -1,28 +1,28 @@
 package men.groupiron;
 
 import com.google.common.collect.ImmutableList;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.EnumComposition;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.StructComposition;
-import net.runelite.api.widgets.Widget;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.util.Text;
 import org.apache.commons.lang3.StringUtils;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Singleton
 public class CollectionLogManager {
     @Inject
     Client client;
+
     @Inject
     ItemManager itemManager;
 
@@ -40,14 +40,13 @@ public class CollectionLogManager {
             472, // Raids
             473, // Clues
             474, // Minigames
-            475  // Other
-    );
+            475 // Other
+            );
     private static final int COLLECTION_LOG_PAGE_NAME_PARAM_ID = 689;
     private static final int COLLECTION_LOG_TAB_ENUM_PARAM_ID = 683;
     private static final int COLLECTION_LOG_PAGE_ITEMS_ENUM_PARAM_ID = 690;
 
-    public void initCollectionLog()
-    {
+    public void initCollectionLog() {
         // NOTE: varbit 6905 gives us the selected collection log tab index and 6906 is the selected page index.
         // In here we build a lookup map which will give us the page name with the tab index and the page index.
         // This should be better than pulling the page name from the widget since that value can be changed by
@@ -100,7 +99,8 @@ public class CollectionLogManager {
                 try {
                     Integer count = Integer.valueOf(matcher.group(1).trim());
                     completionCounts.add(count);
-                } catch(Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
 

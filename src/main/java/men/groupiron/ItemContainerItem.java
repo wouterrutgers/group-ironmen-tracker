@@ -5,6 +5,7 @@ import lombok.Getter;
 public class ItemContainerItem {
     @Getter
     private final int id;
+
     @Getter
     private int quantity;
 

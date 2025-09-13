@@ -28,7 +28,9 @@ public class CollectionPageState implements ConsumableState {
     }
 
     @Override
-    public String whoOwnsThis() { return items.whoOwnsThis(); }
+    public String whoOwnsThis() {
+        return items.whoOwnsThis();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -43,6 +45,9 @@ public class CollectionPageState implements ConsumableState {
             }
         }
 
-        return (completionCountsEqual && tabIdx == other.tabIdx && pageName.equals(other.pageName) && items.equals(other.items));
+        return (completionCountsEqual
+                && tabIdx == other.tabIdx
+                && pageName.equals(other.pageName)
+                && items.equals(other.items));
     }
 }

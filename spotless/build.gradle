@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id 'com.diffplug.spotless' version '7.+'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['../src/main/java']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['../src/test/java']
+        }
+    }
+}
+
+spotless {
+    java {
+        target 'src/**/*.java'
+        importOrder()
+        palantirJavaFormat('2.73.0').formatJavadoc(true)
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        formatAnnotations()
+    }
+}

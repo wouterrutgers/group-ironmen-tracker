@@ -7,12 +7,16 @@ import net.runelite.api.coords.WorldPoint;
 
 public class InteractingState implements ConsumableState {
     private final transient String playerName;
+
     @Getter
     private final String name;
+
     @Getter
     private final int scale;
+
     @Getter
     private final int ratio;
+
     @Getter
     private final LocationState location;
 
