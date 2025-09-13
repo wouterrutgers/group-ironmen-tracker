@@ -10,10 +10,6 @@ import javax.inject.Singleton;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Lightweight name -> id lookup using RuneLite's public item cache. Fetches id->name and noted->unnoted mappings and
- * builds a case-sensitive name->id map excluding noted variants.
- */
 @Slf4j
 @Singleton
 public class ItemNameLookup {
