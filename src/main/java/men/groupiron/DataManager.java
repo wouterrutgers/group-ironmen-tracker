@@ -21,7 +21,7 @@ public class DataManager {
     @Inject
     private CollectionLogManager collectionLogManager;
     @Inject
-    private CollectionLogV2Service collectionLogV2Service;
+    private CollectionLogV2Manager collectionLogV2Manager;
     @Inject
     private HttpRequestService httpRequestService;
     private boolean isMemberInGroup = false;
@@ -101,7 +101,7 @@ public class DataManager {
             achievementDiary.consumeState(updates);
             collectionLogManager.consumeCollections(updates);
             collectionLogManager.consumeNewItems(updates);
-            collectionLogV2Service.consumeClogItems(updates);
+            collectionLogV2Manager.consumeClogItems(updates);
 
             if (updates.size() > 1) {
                 HttpRequestService.HttpResponse response = httpRequestService.post(url, groupToken, updates);
@@ -113,7 +113,7 @@ public class DataManager {
                     }
                     restoreStateIfNothingUpdated();
                 } else {
-                    collectionLogV2Service.clearClogItems();
+                    collectionLogV2Manager.clearClogItems();
                 }
             } else {
                 log.debug("Skip POST: no changes to send (fields={})", updates.size());

@@ -11,7 +11,7 @@ import net.runelite.client.eventbus.Subscribe;
 
 @Slf4j
 @Singleton
-public class CollectionLogV2Service {
+public class CollectionLogV2Manager {
     // item id -> quantity
     private final Map<Integer, Integer> clogItems = new HashMap<>();
 
