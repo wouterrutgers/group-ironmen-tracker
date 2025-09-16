@@ -46,8 +46,6 @@ public class GroupIronmenTrackerPlugin extends Plugin {
     @Inject
     private CollectionLogWidgetSubscriber collectionLogWidgetSubscriber;
     @Inject
-    private ItemNameLookup itemNameLookup;
-    @Inject
     private HttpRequestService httpRequestService;
     @Inject
     ClientThread clientThread;
@@ -69,14 +67,12 @@ public class GroupIronmenTrackerPlugin extends Plugin {
             collectionLogManager.initCollectionLog();
         });
         collectionLogWidgetSubscriber.startUp();
-        itemNameLookup.startUp();
         log.info("Group Ironmen Tracker started!");
     }
 
     @Override
     protected void shutDown() throws Exception {
         collectionLogWidgetSubscriber.shutDown();
-        itemNameLookup.shutDown();
         log.info("Group Ironmen Tracker stopped!");
     }
 
@@ -221,7 +217,6 @@ public class GroupIronmenTrackerPlugin extends Plugin {
             String itemName = Text.removeTags(matcher.group(1));
             if (!StringUtils.isBlank(itemName)) {
                 collectionLogManager.updateNewItem(itemName);
-                handleNewCollectionItem(itemName.trim());
             }
         }
     }
@@ -241,7 +236,6 @@ public class GroupIronmenTrackerPlugin extends Plugin {
                 if (topText.equalsIgnoreCase("Collection log")) {
                     String entry = Text.removeTags(bottomText).substring("New item:".length());
                     collectionLogManager.updateNewItem(entry);
-                    handleNewCollectionItem(entry.trim());
                 }
                 notificationStarted = false;
                 break;
@@ -275,17 +269,6 @@ public class GroupIronmenTrackerPlugin extends Plugin {
     private void updateDeposited(ItemContainerState newState, ItemContainerState previousState) {
         ItemContainerState deposited = newState.whatGotRemoved(previousState);
         dataManager.getDeposited().update(deposited);
-    }
-
-    private void handleNewCollectionItem(String itemName) {
-        try {
-            Integer itemId = itemNameLookup.findItemId(itemName);
-            if (itemId != null) {
-                collectionLogV2Manager.storeClogItem(itemId, 1);
-            }
-        } catch (Exception ignored) {
-            //
-        }
     }
 
     private boolean doNotUseThisData() {
